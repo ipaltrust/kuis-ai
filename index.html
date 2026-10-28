@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id" data-tema="hijau">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tantangan AI untuk Pemuda Muslim</title>
+<style>
+/* ===== TEMA — ganti data-tema di tag html: terang | indigo | hijau ===== */
+:root{--f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+html[data-tema="hijau"]{--bg:#f6f7f9;--kartu:#fff;--teks:#1b1f26;--redup:#5c6673;--aksen:#2e2a63;--aksen2:#b58a34;--garis:#e2e6ec;--lembut:#eef1f6}
+html[data-tema="indigo"]{--bg:#ecebf3;--kartu:#fff;--teks:#1a1832;--redup:#5b5878;--aksen:#2e2a63;--aksen2:#b58a34;--garis:#dcdaea;--lembut:#e7e5f1}
+html[data-tema="hijau"]{--bg:#eef3ef;--kartu:#fff;--teks:#15241b;--redup:#55685c;--aksen:#1f5137;--aksen2:#b58a34;--garis:#d9e3dc;--lembut:#e6ede8}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--teks);line-height:1.55;padding:16px}
+.bungkus{max-width:680px;margin:0 auto}
+
+header{margin-bottom:18px}
+h1{font-size:26px;line-height:1.2;letter-spacing:-.4px}
+.sub{color:var(--redup);font-size:15px;margin-top:6px}
+
+.jejak{display:flex;gap:6px;margin:16px 0}
+.jejak i{flex:1;height:5px;background:var(--garis);border-radius:3px}
+.jejak i.isi{background:var(--aksen)}
+
+.kartu{background:var(--kartu);border:1px solid var(--garis);border-radius:14px;padding:20px;margin-bottom:14px}
+.langkah{display:none}.langkah.aktif{display:block}
+h2{font-size:19px;margin-bottom:4px}
+.bantu{font-size:14px;color:var(--redup);margin-bottom:16px}
+
+label.pil{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border:1px solid var(--garis);
+  border-radius:10px;margin-bottom:8px;cursor:pointer;font-size:15px;background:var(--kartu)}
+label.pil:hover{background:var(--lembut)}
+label.pil input{margin-top:3px;flex-shrink:0;accent-color:var(--aksen)}
+label.pil.terpilih{border-color:var(--aksen);background:var(--lembut)}
+
+.isian{margin-bottom:14px}
+.isian label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+input[type=text],input[type=number],textarea,select{width:100%;padding:11px 13px;border:1px solid var(--garis);
+  border-radius:10px;font:inherit;font-size:16px;background:var(--kartu);color:var(--teks)}
+textarea{min-height:84px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--aksen)}
+
+.tombol{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+button{font:inherit;font-size:15px;font-weight:600;padding:12px 20px;border-radius:10px;border:1px solid var(--aksen);
+  background:var(--aksen);color:#fff;cursor:pointer}
+button.garis{background:transparent;color:var(--aksen)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:active{transform:translateY(1px)}
+
+#hasil .skor{font-size:46px;font-weight:800;color:var(--aksen);line-height:1}
+#hasil .predikat{font-size:20px;font-weight:700;margin:4px 0 12px}
+#hasil ul{list-style:none;margin-top:12px}
+#hasil li{padding:11px 0 11px 26px;border-top:1px solid var(--garis);position:relative;font-size:15px}
+#hasil li::before{content:"";position:absolute;left:0;top:19px;width:14px;height:3px;background:var(--aksen2);border-radius:2px}
+.catatan{margin-top:16px;padding:14px;background:var(--lembut);border-radius:10px;font-size:14px;color:var(--redup)}
+.galat{color:#b3261e;font-size:14px;margin-top:8px}
+
+footer{text-align:center;font-size:13px;color:var(--redup);margin:22px 0 8px}
+
+@media print{
+  body{background:#fff;padding:0}
+  .jejak,.tombol,.langkah:not(#hasil),footer{display:none!important}
+  #hasil{display:block!important;border:none;padding:0}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="bungkus">
+
+<header>
+  <h1>Tantangan AI untuk Pemuda Muslim</h1>
+  <div class="sub">8 soal singkat untuk memeriksa pijakan Anda: Paham, Pakai, Pertanggungjawabkan. Pemeriksaan mandiri, bukan ujian.</div>
+</header>
+
+<div class="jejak" id="jejak"></div>
+
+<!-- ================= LANGKAH-LANGKAH =================
+     Gandakan blok .langkah sesuai kebutuhan.
+     Nama input dipakai sebagai kunci di fungsi hitung().          -->
+
+<section class="langkah kartu aktif">
+<p class="bantu">Soal 1 dari 8 · pijakan: Paham</p>
+<h2>AI seperti ChatGPT paling tepat dipahami sebagai…</h2>
+<label class="pil"><input type="radio" name="q1" value="1"> Alat yang mengolah pola dari data, dan bisa keliru</label>
+<label class="pil"><input type="radio" name="q1" value="0"> Sumber kebenaran yang jawabannya pasti benar</label>
+<label class="pil"><input type="radio" name="q1" value="0"> Makhluk yang berpikir dan merasa seperti manusia</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 2 dari 8 · pijakan: Pertanggungjawabkan</p>
+<h2>AI memberi jawaban yang yakin lengkap dengan kutipan rinci, tetapi Anda tidak mengenal sumbernya. Langkah terbaik…</h2>
+<label class="pil"><input type="radio" name="q2" value="0"> Pakai saja, jawabannya meyakinkan</label>
+<label class="pil"><input type="radio" name="q2" value="1"> Periksa ke sumber aslinya sebelum dipakai</label>
+<label class="pil"><input type="radio" name="q2" value="0"> Tanya AI yang sama lagi, kalau jawabannya sama berarti benar</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 3 dari 8 · pijakan: Pakai</p>
+<h2>Cara memakai AI untuk tugas kuliah yang paling sehat adalah…</h2>
+<label class="pil"><input type="radio" name="q3" value="0"> Minta AI menulis seluruh tugas, lalu kumpulkan</label>
+<label class="pil"><input type="radio" name="q3" value="1"> Minta AI menjelaskan dan mengkritik draf saya, lalu saya tulis dan pahami sendiri, sesuai aturan dosen</label>
+<label class="pil"><input type="radio" name="q3" value="0"> Tidak pernah memakainya sama sekali</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 4 dari 8 · pijakan: Pertanggungjawabkan</p>
+<h2>Muncul video viral tokoh mengucapkan hal mengejutkan. Langkah pertama yang tepat…</h2>
+<label class="pil"><input type="radio" name="q4" value="0"> Bagikan cepat supaya orang lain waspada</label>
+<label class="pil"><input type="radio" name="q4" value="1"> Periksa sumber dan konteksnya dulu (tabayyun) sebelum percaya atau membagikan</label>
+<label class="pil"><input type="radio" name="q4" value="0"> Percaya kalau videonya terlihat nyata</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 5 dari 8 · pijakan: Pertanggungjawabkan</p>
+<h2>Jika karya yang dibuat dengan bantuan AI ternyata mengandung kesalahan, siapa yang bertanggung jawab?</h2>
+<label class="pil"><input type="radio" name="q5" value="0"> AI-nya</label>
+<label class="pil"><input type="radio" name="q5" value="0"> Perusahaan pembuat AI</label>
+<label class="pil"><input type="radio" name="q5" value="1"> Saya sebagai pengguna yang memakainya</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 6 dari 8 · pijakan: Pakai</p>
+<h2>Manakah yang paling aman dimasukkan ke AI di internet?</h2>
+<label class="pil"><input type="radio" name="q6" value="0"> Foto KTP dan kata sandi akun</label>
+<label class="pil"><input type="radio" name="q6" value="0"> Data teman tanpa izin mereka</label>
+<label class="pil"><input type="radio" name="q6" value="1"> Pertanyaan umum atau teks tanpa data pribadi</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 7 dari 8 · pijakan: Pertanggungjawabkan</p>
+<h2>Setelah mahir memakai AI, pertanyaan yang paling menunjukkan arah yang benar adalah…</h2>
+<label class="pil"><input type="radio" name="q7" value="0"> Bagaimana supaya hasilnya cepat tanpa ada yang tahu saya memakai AI?</label>
+<label class="pil"><input type="radio" name="q7" value="0"> Bagaimana supaya hanya saya yang bisa memakainya?</label>
+<label class="pil"><input type="radio" name="q7" value="1"> Bagaimana kemampuan ini bisa membantu orang lain?</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="maju">Lanjut</button></div>
+</section>
+<section class="langkah kartu">
+<p class="bantu">Soal 8 dari 8 · pijakan: Pertanggungjawabkan</p>
+<h2>AI menjawab pertanyaan hukum agama dengan sangat percaya diri. Sikap yang tepat…</h2>
+<label class="pil"><input type="radio" name="q8" value="0"> Anggap itu fatwa, karena AI membaca banyak sumber</label>
+<label class="pil"><input type="radio" name="q8" value="1"> Jadikan AI pembantu mencari rujukan, lalu tanyakan ke ulama atau lembaga fatwa yang kompeten</label>
+<label class="pil"><input type="radio" name="q8" value="0"> Abaikan semua jawaban AI tentang agama</label>
+<div class="galat" hidden>Pilih salah satu dulu ya.</div>
+<div class="tombol"><button class="garis" data-aksi="mundur">Kembali</button><button data-aksi="hitung">Lihat hasil</button></div>
+</section>
+
+<section class="langkah kartu" id="hasil">
+  <h2>Hasil</h2>
+  <div id="isiHasil"></div>
+  <div class="tombol">
+    <button class="garis" data-aksi="ulang">Ulangi</button>
+    <button class="garis" data-aksi="salin">Salin hasil</button>
+    <button data-aksi="cetak">Simpan PDF</button>
+  </div>
+</section>
+
+<footer>LMT TRUSTCO Sumbar · Andalas Islamic Fair 2026</footer>
+</div>
+
+<script>
+/* ============ LOGIKA ALAT — bagian yang diisi per alat ============
+   hitung(d) menerima seluruh jawaban sebagai objek {namaInput: nilai}
+   dan mengembalikan { skor, predikat, butir[], catatan }            */
+var SOAL=[{"pj": "Paham", "q": "AI seperti ChatGPT paling tepat dipahami sebagai…", "ok": "Alat yang mengolah pola dari data, dan bisa keliru", "w": "AI menghasilkan jawaban dari pola data, tanpa niat dan tanpa tanggung jawab. Ia bisa terdengar yakin padahal keliru.", "a": "Pegang prinsip: AI membantu berpikir, bukan menggantikan penilaian Anda."}, {"pj": "Pertanggungjawabkan", "q": "AI memberi jawaban yang yakin lengkap dengan kutipan rinci, tetapi Anda tidak mengenal sumbernya. Langkah terbaik…", "ok": "Periksa ke sumber aslinya sebelum dipakai", "w": "Jawaban yang sama berulang belum tentu benar, dan AI bisa menyebut rujukan yang tidak ada. Pemeriksaan ke sumber asli yang bisa dipercaya.", "a": "Biasakan satu kali periksa (raso jo pareso) sebelum mengutip atau membagikan hasil AI."}, {"pj": "Pakai", "q": "Cara memakai AI untuk tugas kuliah yang paling sehat adalah…", "ok": "Minta AI menjelaskan dan mengkritik draf saya, lalu saya tulis dan pahami sendiri, sesuai aturan dosen", "w": "AI paling bermanfaat sebagai teman berpikir. Menyerahkan seluruh tugas membuat Anda tidak belajar dan tidak sanggup menjelaskan isinya.", "a": "Coba minggu ini: tulis draf sendiri dulu, lalu minta AI mencari bagian yang lemah."}, {"pj": "Pertanggungjawabkan", "q": "Muncul video viral tokoh mengucapkan hal mengejutkan. Langkah pertama yang tepat…", "ok": "Periksa sumber dan konteksnya dulu (tabayyun) sebelum percaya atau membagikan", "w": "Video, suara, dan foto kini bisa dipalsukan dengan AI. Terlihat nyata tidak lagi cukup sebagai bukti.", "a": "Sebelum membagikan apa pun, cari tahu dari mana asalnya dan apakah media tepercaya melaporkan hal yang sama."}, {"pj": "Pertanggungjawabkan", "q": "Jika karya yang dibuat dengan bantuan AI ternyata mengandung kesalahan, siapa yang bertanggung jawab?", "ok": "Saya sebagai pengguna yang memakainya", "w": "AI tidak bisa dimintai pertanggungjawaban. Yang menyerahkan, menerbitkan, atau membagikan hasilnya adalah pemegang amanah.", "a": "Anggap hasil AI sebagai draf. Anda yang menandatangani versi akhirnya."}, {"pj": "Pakai", "q": "Manakah yang paling aman dimasukkan ke AI di internet?", "ok": "Pertanyaan umum atau teks tanpa data pribadi", "w": "Apa yang dimasukkan ke layanan AI bisa disimpan atau diproses pihak lain. Data pribadi dan rahasia orang lain bukan milik kita untuk dibagikan.", "a": "Sebelum menempel teks ke AI, hapus nama, nomor, dan data sensitif."}, {"pj": "Pertanggungjawabkan", "q": "Setelah mahir memakai AI, pertanyaan yang paling menunjukkan arah yang benar adalah…", "ok": "Bagaimana kemampuan ini bisa membantu orang lain?", "w": "Keberhasilan pribadi tidak salah, tetapi arah yang lebih utuh adalah manfaat bagi sesama. Anda tidak harus ahli teknologi: gabungkan keahlian Anda dengan AI untuk pendidikan, UMKM, atau literasi digital.", "a": "Pilih satu orang atau komunitas yang bisa Anda bantu dengan keahlian dan AI, lalu mulai dari satu langkah kecil."}, {"pj": "Pertanggungjawabkan", "q": "AI menjawab pertanyaan hukum agama dengan sangat percaya diri. Sikap yang tepat…", "ok": "Jadikan AI pembantu mencari rujukan, lalu tanyakan ke ulama atau lembaga fatwa yang kompeten", "w": "AI bukan pemberi fatwa dan bisa keliru mengutip. Soal hukum agama tetap dirujuk kepada yang berilmu.", "a": "Bila AI menyebut dalil, cek teks dan sumbernya sendiri sebelum dipakai atau diajarkan."}];
+function hitung(d){
+  var skor=0,salah=[];
+  SOAL.forEach(function(s,i){ if(d["q"+(i+1)]==="1")skor++; else salah.push(i); });
+  var pred= skor===8?"Pijakan sudah kuat":skor>=6?"Pijakan hampir mantap":skor>=4?"Pijakan sedang dibangun":skor>=2?"Beberapa titik perlu diperkuat":"Titik awal yang baik untuk mulai belajar";
+  var butir=[];
+  salah.forEach(function(i){var s=SOAL[i];
+    butir.push("Soal "+(i+1)+" ("+s.pj+"). Yang tepat: "+s.ok+". "+s.w+" Langkah: "+s.a);});
+  if(!salah.length) butir.push("Semua jawaban tepat. Tantangan berikutnya: ajari satu teman cara memeriksa hasil AI sebelum dibagikan.");
+  butir.push("Tantangan 7 hari: pilih satu pekerjaan nyata, minta AI membuat draf, periksa sendiri, dan pastikan hasilnya bermanfaat bagi orang lain.");
+  return {skor:skor+" / 8",predikat:pred,butir:butir,
+    catatan:"Kuis 8 soal ini hanya pemeriksaan mandiri atas pemahaman dasar pada satu waktu. Hasilnya bukan ukuran kecerdasan, keimanan, atau kemampuan Anda, dan bukan fatwa. Soal hukum agama tetap dirujuk kepada ulama atau lembaga fatwa yang kompeten."};
+}
+
+/* ============ MESIN — tidak perlu diubah ============ */
+(function(){
+  var langkah=[].slice.call(document.querySelectorAll('.langkah')), i=0;
+  var jejak=document.getElementById('jejak');
+  langkah.forEach(function(){jejak.insertAdjacentHTML('beforeend','<i></i>')});
+
+  function gambar(){
+    langkah.forEach(function(s,k){s.classList.toggle('aktif',k===i)});
+    [].forEach.call(jejak.children,function(b,k){b.classList.toggle('isi',k<=i)});
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function kumpul(){
+    var d={};
+    document.querySelectorAll('input,select,textarea').forEach(function(el){
+      if(!el.name)return;
+      if(el.type==='radio'){ if(el.checked) d[el.name]=el.value; }
+      else if(el.type==='checkbox'){ (d[el.name]=d[el.name]||[]); if(el.checked)d[el.name].push(el.value); }
+      else d[el.name]=el.value;
+    });
+    return d;
+  }
+
+  function lengkap(sec){
+    var radio={}, kosong=false;
+    sec.querySelectorAll('input[type=radio]').forEach(function(r){ radio[r.name]=radio[r.name]||r.checked||false; if(r.checked)radio[r.name]=true; });
+    Object.keys(radio).forEach(function(k){ if(!radio[k])kosong=true; });
+    sec.querySelectorAll('input[type=number],input[type=text],textarea').forEach(function(el){ if(el.required&&!el.value.trim())kosong=true; });
+    var g=sec.querySelector('.galat'); if(g)g.hidden=!kosong;
+    return !kosong;
+  }
+
+  function tampilHasil(){
+    var r=hitung(kumpul()), h='';
+    if(r.skor!==undefined&&r.skor!==null) h+='<div class="skor">'+r.skor+'</div>';
+    if(r.predikat) h+='<div class="predikat">'+r.predikat+'</div>';
+    if(r.butir&&r.butir.length) h+='<ul>'+r.butir.map(function(b){return '<li>'+b+'</li>'}).join('')+'</ul>';
+    if(r.catatan) h+='<div class="catatan">'+r.catatan+'</div>';
+    document.getElementById('isiHasil').innerHTML=h;
+  }
+
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-aksi]'); if(!t)return;
+    var a=t.dataset.aksi;
+    if(a==='maju'){ if(lengkap(langkah[i])){i=Math.min(langkah.length-1,i+1);gambar();} }
+    else if(a==='mundur'){ i=Math.max(0,i-1); gambar(); }
+    else if(a==='hitung'){ if(lengkap(langkah[i])){ tampilHasil(); i=langkah.length-1; gambar(); } }
+    else if(a==='ulang'){ document.querySelectorAll('input,textarea,select').forEach(function(el){
+        if(el.type==='radio'||el.type==='checkbox')el.checked=false; else el.value=''; });
+      document.querySelectorAll('label.pil').forEach(function(l){l.classList.remove('terpilih')});
+      i=0; gambar(); }
+    else if(a==='cetak'){ window.print(); }
+    else if(a==='salin'){
+      var teks=document.getElementById('isiHasil').innerText;
+      var ta=document.createElement('textarea'); ta.value=teks; document.body.appendChild(ta);
+      ta.select(); try{document.execCommand('copy')}catch(err){} ta.remove();
+      t.textContent='Tersalin'; setTimeout(function(){t.textContent='Salin hasil'},1600);
+    }
+  });
+
+  document.addEventListener('change',function(e){
+    if(e.target.type==='radio'){
+      document.querySelectorAll('input[name="'+e.target.name+'"]').forEach(function(r){
+        r.closest('label.pil') && r.closest('label.pil').classList.toggle('terpilih',r.checked);
+      });
+    }
+    if(e.target.type==='checkbox'&&e.target.closest('label.pil')){
+      e.target.closest('label.pil').classList.toggle('terpilih',e.target.checked);
+    }
+  });
+
+  gambar();
+})();
+</script>
+</body>
+</html>
