@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layar Polling</title>
+<style>
+:root{--bg:#f4f6f3;--kartu:#fff;--teks:#15241b;--redup:#55685c;--aksen:#1f5137;--aksen2:#b58a34;--garis:#d9e3dc;--lembut:#e6ede8;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--f);background:var(--bg);color:var(--teks);line-height:1.4;padding:2.2vw;display:flex;flex-direction:column;gap:1.4vw}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.merek{font-size:max(13px,1vw);letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--aksen)}
+.alat{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:14px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--aksen);background:transparent;color:var(--aksen);cursor:pointer}
+button.aktif{background:var(--aksen);color:#fff}
+main{flex:1;display:grid;grid-template-columns:1fr 1fr 22vw;gap:1.4vw;min-height:0}
+main.hanya-poll{grid-template-columns:2fr 22vw}main.hanya-poll #panelKata{display:none}
+main.hanya-kata{grid-template-columns:2fr 22vw}main.hanya-kata #panelPoll{display:none}
+.panel{background:var(--kartu);border:1px solid var(--garis);border-radius:16px;padding:1.8vw;display:flex;flex-direction:column;gap:1vw;min-height:0;overflow:hidden}
+.panel h2{font-size:max(18px,1.7vw);line-height:1.25}
+.total{font-size:max(13px,1vw);color:var(--redup)}
+.bar{margin-bottom:1.1vw}
+.bar .atas{display:flex;justify-content:space-between;gap:12px;font-size:max(16px,1.5vw);font-weight:600;margin-bottom:.4vw}
+.bar .atas b{color:var(--aksen);font-variant-numeric:tabular-nums}
+.bar .jalur{height:max(14px,1.4vw);background:var(--lembut);border-radius:99px;overflow:hidden}
+.bar .isi{height:100%;width:0;background:var(--aksen);border-radius:99px;transition:width .6s ease}
+.bar.unggul .isi{background:var(--aksen2)}
+.awan{display:flex;flex-wrap:wrap;gap:.6vw .9vw;align-content:flex-start;overflow:auto}
+.awan span{line-height:1.15;font-weight:700;color:var(--aksen);cursor:pointer;padding:.15em .3em;border-radius:6px}
+.awan span:nth-child(3n+2){color:var(--aksen2)}
+.awan span:nth-child(5n+4){color:#2d3f35}
+.awan span:hover{background:var(--lembut);text-decoration:line-through}
+.kosong{color:var(--redup);font-size:max(14px,1.2vw)}
+.qr{align-items:center;text-align:center;justify-content:center}
+#qr{background:#fff;padding:10px;border-radius:10px;border:1px solid var(--garis)}
+#qr img,#qr canvas{width:100%!important;height:auto!important;max-width:18vw;display:block}
+.alamat{font-size:max(12px,.95vw);color:var(--redup);word-break:break-all}
+.sesi{font-size:max(14px,1.2vw);font-weight:700}
+footer{display:flex;justify-content:space-between;font-size:max(12px,.9vw);color:var(--redup)}
+.titik{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#9aa;margin-right:.4em;vertical-align:middle}
+.titik.hidup{background:#2e9d5b}.titik.mati{background:#c0392b}
+.peringatan{background:#fff5d6;border:1px solid #e6c46a;border-radius:12px;padding:16px;font-size:16px;max-width:720px}
+@media (max-width:900px){main,main.hanya-poll,main.hanya-kata{grid-template-columns:1fr}#qr img,#qr canvas{max-width:200px}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<header>
+  <div class="merek">LMT TRUSTCO SUMBAR MADANI · Suara Peserta</div>
+  <div class="alat">
+    <button data-tampil="semua" class="aktif">Polling + Kata</button>
+    <button data-tampil="poll">Polling saja</button>
+    <button data-tampil="kata">Kata saja</button>
+    <button id="pulihkan" title="Tampilkan lagi kata yang disembunyikan">Pulihkan kata</button>
+    <button id="penuh">Layar penuh</button>
+  </div>
+</header>
+
+<div id="peringatan" class="peringatan" hidden>
+  Polling belum tersambung. Isi <b>GAS_URL</b> di berkas config.js dengan alamat Aplikasi web (berakhiran /exec), lalu muat ulang halaman ini.
+</div>
+
+<main id="utama">
+  <section class="panel" id="panelPoll">
+    <h2 id="tanyaPoll">Memuat…</h2>
+    <div class="total" id="totalPoll"></div>
+    <div id="bar"></div>
+  </section>
+  <section class="panel" id="panelKata">
+    <h2 id="tanyaKata">Memuat…</h2>
+    <div class="total" id="totalKata"></div>
+    <div class="awan" id="awan"></div>
+  </section>
+  <section class="panel qr">
+    <div class="sesi" id="labelSesi"></div>
+    <div id="qr"></div>
+    <div class="alamat" id="alamat"></div>
+    <div class="total">Pindai, kerjakan kuis, lalu kirim pendapat Anda.</div>
+  </section>
+</main>
+
+<footer>
+  <span><span class="titik" id="titik"></span><span id="status">Menyambungkan…</span></span>
+  <span>Klik sebuah kata untuk menyembunyikannya dari layar.</span>
+</footer>
+
+<script>
+(function(){
+  var URL_GAS=(typeof GAS_URL==='string')?GAS_URL.trim():'';
+  var SESI='UMUM';
+  try{var q=new URLSearchParams(location.search).get('sesi');
+    SESI=(q||(typeof SESI_BAWAAN==='string'?SESI_BAWAAN:'UMUM')).toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,20)||'UMUM';}catch(e){}
+  var $=function(id){return document.getElementById(id)};
+  var kuis=location.href.replace(/layar\.html.*$/,'').replace(/[?#].*$/,'');
+  if(!/\/$/.test(kuis))kuis+='/';
+  kuis+= '?sesi='+encodeURIComponent(SESI);
+  $('labelSesi').textContent='Sesi '+SESI;
+  $('alamat').textContent=kuis.replace(/^https?:\/\//,'');
+  try{ new QRCode($('qr'),{text:kuis,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e){ $('qr').textContent='QR tidak tersedia tanpa internet. Bagikan alamat di bawah.'; }
+
+  var kunciSembunyi='layar_sembunyi_'+SESI, sembunyi={};
+  try{sembunyi=JSON.parse(localStorage.getItem(kunciSembunyi)||'{}')}catch(e){sembunyi={}}
+  function simpanSembunyi(){try{localStorage.setItem(kunciSembunyi,JSON.stringify(sembunyi))}catch(e){}}
+
+  document.querySelectorAll('[data-tampil]').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('[data-tampil]').forEach(function(x){x.classList.toggle('aktif',x===b)});
+      $('utama').className=b.dataset.tampil==='poll'?'hanya-poll':b.dataset.tampil==='kata'?'hanya-kata':'';
+    });
+  });
+  $('pulihkan').addEventListener('click',function(){sembunyi={};simpanSembunyi();if(terakhir)gambar(terakhir);});
+  $('penuh').addEventListener('click',function(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}catch(e){}});
+
+  if(!URL_GAS){$('peringatan').hidden=false;$('status').textContent='Belum tersambung';$('titik').className='titik mati';
+    $('tanyaPoll').textContent='Polling belum aktif';$('tanyaKata').textContent='Word cloud belum aktif';return;}
+
+  var terakhir=null, gagal=0;
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  function gambar(d){
+    $('tanyaPoll').textContent=d.pertanyaanPoll||'Polling';
+    $('totalPoll').textContent=(d.pollBuka?'':'Ditutup · ')+d.totalPoll+' suara';
+    var maks=0;(d.opsi||[]).forEach(function(o){maks=Math.max(maks,d.hitung[o]||0)});
+    var h='';
+    (d.opsi||[]).forEach(function(o){
+      var n=d.hitung[o]||0, pct=d.totalPoll?Math.round(n/d.totalPoll*100):0;
+      h+='<div class="bar'+(n&&n===maks?' unggul':'')+'"><div class="atas"><span>'+esc(o)+'</span><b>'+pct+'% · '+n+'</b></div>'+
+         '<div class="jalur"><div class="isi" style="width:'+pct+'%"></div></div></div>';
+    });
+    $('bar').innerHTML=h;
+
+    $('tanyaKata').textContent=d.pertanyaanKata||'Word cloud';
+    var tampil=(d.kata||[]).filter(function(k){return !sembunyi[k.teks.toLowerCase()]});
+    $('totalKata').textContent=(d.kataBuka?'':'Ditutup · ')+d.totalKata+' jawaban';
+    if(!tampil.length){$('awan').innerHTML='<span class="kosong" style="cursor:default">Belum ada jawaban.</span>';return}
+    var top=tampil[0].n;
+    $('awan').innerHTML=tampil.map(function(k){
+      var ukuran=1.1+2.4*Math.sqrt(k.n/top);
+      return '<span data-k="'+esc(k.teks.toLowerCase())+'" style="font-size:'+ukuran.toFixed(2)+'vw" title="'+k.n+' kali">'+esc(k.teks)+'</span>';
+    }).join('');
+  }
+  $('awan').addEventListener('click',function(e){
+    var s=e.target.closest('span[data-k]');if(!s)return;
+    sembunyi[s.dataset.k]=1;simpanSembunyi();if(terakhir)gambar(terakhir);
+  });
+
+  function ambil(){
+    fetch(URL_GAS+(URL_GAS.indexOf('?')<0?'?':'&')+'aksi=hasil&sesi='+encodeURIComponent(SESI)+'&_='+Date.now(),{redirect:'follow'})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+      .then(function(d){
+        if(!d.ok)throw new Error(d.pesan);
+        terakhir=d;gagal=0;gambar(d);
+        $('titik').className='titik hidup';
+        $('status').textContent='Tersambung · diperbarui '+new Date().toLocaleTimeString('id-ID');
+      })
+      .catch(function(){gagal++;$('titik').className='titik mati';
+        $('status').textContent='Gagal memuat ('+gagal+'x). Mencoba lagi…';})
+      .then(function(){setTimeout(ambil,gagal?Math.min(15000,4000*gagal):4000)});
+  }
+  ambil();
+})();
+</script>
+</body>
+</html>
