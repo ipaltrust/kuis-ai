@@ -56,11 +56,27 @@ button:active{transform:translateY(1px)}
 .catatan{margin-top:16px;padding:14px;background:var(--lembut);border-radius:10px;font-size:14px;color:var(--redup)}
 .galat{color:#b3261e;font-size:14px;margin-top:8px}
 
+/* ===== POLLING (aktif bila config.js berisi GAS_URL) ===== */
+.lompat{margin-top:10px;font-size:14px;padding:8px 14px}
+#suara{margin-top:18px;padding-top:16px;border-top:2px solid var(--garis)}
+#suara h3{font-size:17px;margin-bottom:4px}
+#suara .tanya{font-size:15px;margin:12px 0 8px;font-weight:600}
+.opsi-poll{display:grid;gap:8px}
+.opsi-poll button{text-align:left;background:var(--kartu);color:var(--teks);border:1px solid var(--garis);font-weight:500}
+.opsi-poll button.dipilih{border-color:var(--aksen);background:var(--lembut);font-weight:700}
+.baris-kata{display:flex;gap:8px;margin-top:4px}
+.baris-kata input{flex:1}
+.status-suara{font-size:14px;color:var(--redup);margin-top:8px;min-height:1.2em}
+.status-suara.ok{color:var(--aksen)}
+#hasil.tanpa-hasil>h2,#hasil.tanpa-hasil>.tombol,#hasil.tanpa-hasil>#isiHasil{display:none}
+#keKuis{display:none;margin-top:16px}#hasil.tanpa-hasil #keKuis{display:inline-block}
+#hasil.tanpa-hasil #suara{margin-top:0;padding-top:0;border-top:none}
+
 footer{text-align:center;font-size:13px;color:var(--redup);margin:22px 0 8px}
 
 @media print{
   body{background:#fff;padding:0}
-  .jejak,.tombol,.langkah:not(#hasil),footer{display:none!important}
+  .jejak,.tombol,.langkah:not(#hasil),footer,#suara,.lompat{display:none!important}
   #hasil{display:block!important;border:none;padding:0}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -72,6 +88,7 @@ footer{text-align:center;font-size:13px;color:var(--redup);margin:22px 0 8px}
 <header>
   <h1>Tantangan AI untuk Pemuda Muslim</h1>
   <div class="sub">8 soal singkat untuk memeriksa pijakan Anda: Paham, Pakai, Pertanggungjawabkan. Pemeriksaan mandiri, bukan ujian.</div>
+  <button class="garis lompat" id="lompatSuara" data-aksi="kesuara" hidden>Langsung ikut polling</button>
 </header>
 
 <div class="jejak" id="jejak"></div>
@@ -161,11 +178,27 @@ footer{text-align:center;font-size:13px;color:var(--redup);margin:22px 0 8px}
     <button class="garis" data-aksi="salin">Salin hasil</button>
     <button data-aksi="cetak">Simpan PDF</button>
   </div>
+  <div id="suara" hidden>
+    <h3>Suarakan pendapat Anda</h3>
+    <p class="bantu" style="margin-bottom:0">Jawaban tanpa nama dan langsung tampil di layar. Jangan menulis data pribadi.</p>
+    <div id="blokPoll" hidden>
+      <p class="tanya" id="tanyaPoll"></p>
+      <div class="opsi-poll" id="opsiPoll"></div>
+      <div class="status-suara" id="statusPoll"></div>
+    </div>
+    <div id="blokKata" hidden>
+      <p class="tanya" id="tanyaKata"></p>
+      <div class="baris-kata"><input type="text" id="isiKata" maxlength="30" placeholder="Satu kata atau frasa singkat" autocomplete="off"><button data-aksi="kirimkata">Kirim</button></div>
+      <div class="status-suara" id="statusKata"></div>
+    </div>
+    <button class="garis" id="keKuis" data-aksi="ulang">Kerjakan kuis 8 soal</button>
+  </div>
 </section>
 
 <footer>LMT TRUSTCO SUMBAR MADANI</footer>
 </div>
 
+<script src="config.js"></script>
 <script>
 /* ============ LOGIKA ALAT — bagian yang diisi per alat ============
    hitung(d) menerima seluruh jawaban sebagai objek {namaInput: nilai}
@@ -230,12 +263,14 @@ function hitung(d){
     var a=t.dataset.aksi;
     if(a==='maju'){ if(lengkap(langkah[i])){i=Math.min(langkah.length-1,i+1);gambar();} }
     else if(a==='mundur'){ i=Math.max(0,i-1); gambar(); }
-    else if(a==='hitung'){ if(lengkap(langkah[i])){ tampilHasil(); i=langkah.length-1; gambar(); } }
+    else if(a==='hitung'){ if(lengkap(langkah[i])){ document.getElementById('hasil').classList.remove('tanpa-hasil'); tampilHasil(); i=langkah.length-1; gambar(); } }
     else if(a==='ulang'){ document.querySelectorAll('input,textarea,select').forEach(function(el){
         if(el.type==='radio'||el.type==='checkbox')el.checked=false; else el.value=''; });
       document.querySelectorAll('label.pil').forEach(function(l){l.classList.remove('terpilih')});
       i=0; gambar(); }
     else if(a==='cetak'){ window.print(); }
+    else if(a==='kesuara'){ var hs=document.getElementById('hasil'); if(!document.getElementById('isiHasil').innerHTML.trim())hs.classList.add('tanpa-hasil'); i=langkah.length-1; gambar(); var s=document.getElementById('suara'); if(s&&!s.hidden)setTimeout(function(){s.scrollIntoView({behavior:'smooth'})},300); }
+    else if(a==='kirimkata'){ window.kirimKata && window.kirimKata(); }
     else if(a==='salin'){
       var teks=document.getElementById('isiHasil').innerText;
       var ta=document.createElement('textarea'); ta.value=teks; document.body.appendChild(ta);
@@ -256,6 +291,84 @@ function hitung(d){
   });
 
   gambar();
+})();
+</script>
+<script>
+/* ============ POLLING — membaca GAS_URL dari config.js ============ */
+(function(){
+  var URL_GAS=(typeof GAS_URL==='string')?GAS_URL.trim():'';
+  if(!URL_GAS||!window.fetch)return;
+  var SESI='UMUM';
+  try{var q=new URLSearchParams(location.search).get('sesi');
+    SESI=(q||(typeof SESI_BAWAAN==='string'?SESI_BAWAAN:'UMUM')).toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,20)||'UMUM';}catch(e){}
+  function simpanLokal(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function ambilLokal(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  var ID=ambilLokal('kuisai_id');
+  if(!ID){ID='p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);simpanLokal('kuisai_id',ID);}
+  var kunciPoll='kuisai_poll_'+SESI, kunciKata='kuisai_kata_'+SESI;
+  var $=function(id){return document.getElementById(id)};
+
+  function panggil(param,coba){
+    coba=coba||0;
+    var qs=Object.keys(param).map(function(k){return k+'='+encodeURIComponent(param[k])}).join('&');
+    return fetch(URL_GAS+(URL_GAS.indexOf('?')<0?'?':'&')+qs,{method:'GET',redirect:'follow'})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+      .then(function(j){if(!j.ok&&/sibuk/i.test(j.pesan||'')&&coba<3)throw new Error('sibuk');return j})
+      .catch(function(err){
+        if(coba>=3)throw err;
+        return new Promise(function(ok){setTimeout(ok,1200*(coba+1)+Math.random()*900)}).then(function(){return panggil(param,coba+1)});
+      });
+  }
+  function jeda(){return new Promise(function(ok){setTimeout(ok,Math.random()*1500)})}
+
+  function status(el,teks,baik){el.textContent=teks;el.className='status-suara'+(baik?' ok':'');}
+
+  panggil({aksi:'config'}).then(function(c){
+    if(!c||!c.ok)return;
+    if(!c.pollBuka&&!c.kataBuka)return;
+    $('suara').hidden=false; $('lompatSuara').hidden=false;
+    if(c.pollBuka&&c.opsi&&c.opsi.length){
+      $('blokPoll').hidden=false; $('tanyaPoll').textContent=c.pertanyaanPoll;
+      var sudah=ambilLokal(kunciPoll);
+      c.opsi.forEach(function(o){
+        var b=document.createElement('button'); b.type='button'; b.textContent=o;
+        if(sudah===o)b.classList.add('dipilih');
+        b.addEventListener('click',function(){
+          [].forEach.call($('opsiPoll').children,function(x){x.disabled=true});
+          status($('statusPoll'),'Mengirim…');
+          jeda().then(function(){return panggil({aksi:'pilih',sesi:SESI,id:ID,isi:o})}).then(function(j){
+            if(j.ok){simpanLokal(kunciPoll,o);
+              [].forEach.call($('opsiPoll').children,function(x){x.classList.toggle('dipilih',x.textContent===o)});
+              status($('statusPoll'),'Pilihan terkirim: '+o+'. Anda boleh mengganti pilihan.',true);}
+            else status($('statusPoll'),j.pesan||'Belum terkirim, coba lagi.');
+          }).catch(function(){status($('statusPoll'),'Koneksi bermasalah. Coba ketuk lagi.')})
+          .then(function(){[].forEach.call($('opsiPoll').children,function(x){x.disabled=false})});
+        });
+        $('opsiPoll').appendChild(b);
+      });
+      if(sudah)status($('statusPoll'),'Pilihan Anda: '+sudah+'. Ketuk pilihan lain untuk mengganti.',true);
+    }
+    if(c.kataBuka){
+      $('blokKata').hidden=false; $('tanyaKata').textContent=c.pertanyaanKata;
+      var n=parseInt(ambilLokal(kunciKata)||'0',10);
+      if(n>=3){$('isiKata').disabled=true;status($('statusKata'),'Terima kasih, Anda sudah mengirim 3 jawaban.',true);}
+      $('isiKata').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();window.kirimKata();}});
+    }
+  }).catch(function(){ /* tanpa koneksi: polling disembunyikan, kuis tetap jalan */ });
+
+  window.kirimKata=function(){
+    var el=$('isiKata'), v=el.value.replace(/\s+/g,' ').trim();
+    if(!v){status($('statusKata'),'Tulis satu kata dulu.');return}
+    var n=parseInt(ambilLokal(kunciKata)||'0',10);
+    if(n>=3){status($('statusKata'),'Batas 3 jawaban per perangkat sudah tercapai.');return}
+    el.disabled=true; status($('statusKata'),'Mengirim…');
+    jeda().then(function(){return panggil({aksi:'kata',sesi:SESI,id:ID,isi:v})}).then(function(j){
+      if(j.ok){n++;simpanLokal(kunciKata,String(n));el.value='';
+        status($('statusKata'),n>=3?'Terkirim. Terima kasih, itu jawaban ketiga Anda.':'Terkirim. Anda bisa mengirim '+(3-n)+' jawaban lagi.',true);}
+      else status($('statusKata'),j.pesan||'Belum terkirim, coba lagi.');
+    }).catch(function(){status($('statusKata'),'Koneksi bermasalah. Coba kirim lagi.')})
+    .then(function(){el.disabled=(n>=3)});
+  };
 })();
 </script>
 </body>
